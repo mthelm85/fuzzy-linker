@@ -1,0 +1,13 @@
+[package]
+name = "fuzzy-linker"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+csv = "1.1.6"
+levenshtein = "1.0.5"
+rayon = "1.5.1"
+structopt = "0.3.23"
+vpsearch = "2.0.1"
