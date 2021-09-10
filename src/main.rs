@@ -6,12 +6,6 @@ mod create_tree;
 mod user_input;
 mod read_csv;
 
-#[derive(Debug)]
-pub struct CsvRecord {
-    pub row_a: u32,
-    pub key: String
-}
-
 fn main() {
     let input = user_input::args();
     let (ents_a, vp) = create_tree::tree(&input, true);
@@ -20,7 +14,6 @@ fn main() {
     let matches: Vec<Option<&create_tree::Entity>> = ents_b.into_par_iter()
         .map(|ent| {
             let (index, _) = vp.find_nearest(&ent);
-            // before returning the DHS match (ents_a), push to its matches field the WHD match (ent)
             if levenshtein(&ent.key, &ents_a[index].key) < input.tolerance { Some(&ents_a[index]) } else { None }
         })
         .collect();
