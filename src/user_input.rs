@@ -18,8 +18,8 @@ pub struct Opt {
     #[structopt(short="o", long, help="The directory where you want the output to be saved")]
     pub output: PathBuf,
 
-    #[structopt(short="t", long, help="The maximum difference allowed between entities (0 being an exact match)")]
-    pub tolerance: usize,
+    #[structopt(short="t", long, help="The maximum difference allowed between entities, between 0.0 and 1.0")]
+    pub tolerance: f32,
 }
 
 pub fn args() -> Opt {

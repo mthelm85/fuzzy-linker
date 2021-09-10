@@ -22,10 +22,10 @@ fn main() {
     let matches: Vec<Option<CsvRecord>> = ents_b.into_par_iter()
         .map(|ent| {
             let (index, _) = vp.find_nearest(&ent);
-            if levenshtein(&ent.key, &ents_a[index].key) < input.tolerance {
+            if levenshtein(&ent.key, &ents_a[index].key) < (input.tolerance * ent.key.len() as f32) as usize {
                 Some(CsvRecord {
-                    row_a: ents_a[index].i,
-                    row_b: ent.i
+                    row_a: ents_a[index].i + 2,
+                    row_b: ent.i + 2
                 })
             } else { None }
         })
