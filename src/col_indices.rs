@@ -8,10 +8,10 @@ const COLUMN_LETTERS: [char; 26] = [
 ];
 
 pub fn cols(cols: &Vec<char>) -> Vec<usize> {
-    let indices = cols.iter().map(|&c| {
+    let indices: Vec<usize> = cols.iter().map(|&c| {
         COLUMN_LETTERS.iter()
             .position(|&l| l == c)
-            .unwrap()
+            .expect("unable to get column index")
     }).collect();
     indices
 }
