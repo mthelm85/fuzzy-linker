@@ -11,7 +11,7 @@ pub fn cols(cols: &Vec<char>) -> Vec<usize> {
     let indices: Vec<usize> = cols.iter().map(|&c| {
         COLUMN_LETTERS.iter()
             .position(|&l| l == c)
-            .expect("unable to get column index")
+            .expect(&format!("Unable to get column index. {} is not in the range A - Z", c))
     }).collect();
     indices
 }

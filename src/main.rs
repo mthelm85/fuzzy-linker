@@ -1,3 +1,4 @@
+use anyhow::{ Context, ensure, Result };
 use csv::Writer;
 use indicatif::ParallelProgressIterator;
 use levenshtein::levenshtein;
@@ -6,6 +7,7 @@ use serde::Serialize;
 
 mod col_indices;
 mod create_tree;
+mod errors;
 mod user_input;
 mod read_csv;
 
@@ -15,8 +17,9 @@ struct CsvRecord {
     row_b: u32,
 }
 
-fn main() {
+fn main() -> Result<(), anyhow::Error> {
     let input = user_input::args();
+    ensure!(input.tolerance < 1.0 && input.tolerance > 0.0, errors::Error::ToleranceError { t: input.tolerance });
     println!("Building tree...");
     let (ents_a, vp) = create_tree::tree(&input, true);
     let ents_b: Vec<create_tree::Entity> = read_csv::read(&input, false);
@@ -35,10 +38,16 @@ fn main() {
         })
         .collect();
 
-        let mut wtr = Writer::from_path(&input.output).expect("creating CSV writer");
+        let mut wtr = Writer::from_path(&input.output).context("Error: failed to create CSV writer")?;
     matches.iter()
         .for_each(|r| {
-            if let Some(r) = r { wtr.serialize(r).expect("serializing CSV record") }
+            if let Some(r) = r {
+                match wtr.serialize(r) {
+                    Ok(rcrd) => rcrd,
+                    Err(e) => eprintln!("{}", e)
+                }
+            }
         });
     wtr.flush().expect("flushing CSV writer");
+    Ok(())
 }
