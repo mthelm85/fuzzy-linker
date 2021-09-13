@@ -16,9 +16,8 @@ pub fn read(input: &Opt, a: bool) -> Vec<Entity> {
     };
 
     let mut ents: Vec<Entity> = Vec::new();
-    let mut row = 0;
 
-    for result in rdr.byte_records() {
+    for (row, result) in rdr.byte_records().enumerate() {
         let record = result.expect("getting csv record");
         let mut key = "".to_string();
         for i in &indices {
@@ -29,8 +28,7 @@ pub fn read(input: &Opt, a: bool) -> Vec<Entity> {
             .collect::<String>()
             .to_ascii_uppercase();
 
-        ents.push(Entity{i: row, key: cleaned_key});
-        row += 1;
+        ents.push(Entity{i: row as u32, key: cleaned_key});
     }
 
     ents
