@@ -1,4 +1,5 @@
 use csv::Writer;
+use indicatif::ParallelProgressIterator;
 use levenshtein::levenshtein;
 use rayon::prelude::*;
 use serde::Serialize;
@@ -16,10 +17,13 @@ struct CsvRecord {
 
 fn main() {
     let input = user_input::args();
+    println!("Building tree...");
     let (ents_a, vp) = create_tree::tree(&input, true);
     let ents_b: Vec<create_tree::Entity> = read_csv::read(&input, false);
-
+    println!("Searching for potential matches...");
+    let end = ents_b.len() as u64;
     let matches: Vec<Option<CsvRecord>> = ents_b.into_par_iter()
+        .progress_count(end)
         .map(|ent| {
             let (index, _) = vp.find_nearest(&ent);
             if levenshtein(&ent.key, &ents_a[index].key) < (input.tolerance * ent.key.len() as f32) as usize {
