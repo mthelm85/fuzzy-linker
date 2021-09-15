@@ -80,7 +80,7 @@ fn main() {
             }
         });
     match wtr.flush() {
-        Ok(_) => process::exit(0),
+        Ok(_) => println!("Done"),
         Err(e) => eprintln!("{}", e)
     };
 }
