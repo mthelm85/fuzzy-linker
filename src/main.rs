@@ -1,4 +1,5 @@
-use anyhow::{ Context, ensure, Result };
+use std::process;
+
 use csv::Writer;
 use indicatif::ParallelProgressIterator;
 use levenshtein::levenshtein;
@@ -7,9 +8,10 @@ use serde::Serialize;
 
 mod col_indices;
 mod create_tree;
+mod entity;
 mod errors;
-mod user_input;
 mod read_csv;
+mod user_input;
 
 #[derive(Debug, Serialize)]
 struct CsvRecord {
@@ -17,13 +19,37 @@ struct CsvRecord {
     row_b: u32,
 }
 
-fn main() -> Result<(), anyhow::Error> {
-    let input = user_input::args();
-    ensure!(input.tolerance < 1.0 && input.tolerance > 0.0, errors::Error::ToleranceError { t: input.tolerance });
+fn main() {
+    let input = match user_input::args() {
+        Ok(input) => input,
+        Err(e) => {
+            eprintln!("{}", e);
+            process::exit(1)
+        }
+    };
+
+    let ents_a = match read_csv::read(&input, true) {
+        Ok(ents) => ents,
+        Err(e) => {
+            eprintln!("{}", e);
+            process::exit(1)
+        }
+    };
+
+    let ents_b = match read_csv::read(&input, false) {
+        Ok(ents) => ents,
+        Err(e) => {
+            eprintln!("{}", e);
+            process::exit(1)
+        }
+    };
+    
     println!("Building tree...");
-    let (ents_a, vp) = create_tree::tree(&input, true);
-    let ents_b: Vec<create_tree::Entity> = read_csv::read(&input, false);
+
+    let vp = create_tree::tree(&ents_a);
+
     println!("Searching for potential matches...");
+
     let end = ents_b.len() as u64;
     let matches: Vec<Option<CsvRecord>> = ents_b.into_par_iter()
         .progress_count(end)
@@ -37,8 +63,13 @@ fn main() -> Result<(), anyhow::Error> {
             } else { None }
         })
         .collect();
-
-        let mut wtr = Writer::from_path(&input.output).context("Error: failed to create CSV writer")?;
+    let mut wtr = match Writer::from_path(&input.output) {
+        Ok(wtr) => wtr,
+        Err(_) => {
+            eprintln!("{}", errors::Error::CsvWriterError { p: input.output });
+            process::exit(1)
+        }
+    };
     matches.iter()
         .for_each(|r| {
             if let Some(r) = r {
@@ -48,6 +79,8 @@ fn main() -> Result<(), anyhow::Error> {
                 }
             }
         });
-    wtr.flush().expect("flushing CSV writer");
-    Ok(())
+    match wtr.flush() {
+        Ok(_) => process::exit(0),
+        Err(e) => eprintln!("{}", e)
+    };
 }

@@ -1,14 +1,7 @@
 use levenshtein::levenshtein;
 use vpsearch::Tree;
 
-use super::user_input::*;
-use super::read_csv::*;
-
-#[derive(Clone, Debug)]
-pub struct Entity {
-    pub i: u32,
-    pub key: String
-}
+use super::entity::*;
 
 impl vpsearch::MetricSpace for Entity {
     type UserData = ();
@@ -19,7 +12,6 @@ impl vpsearch::MetricSpace for Entity {
     }
 }
 
-pub fn tree(input: &Opt, a: bool) -> (Vec<Entity>, Tree<Entity>) {
-    let ents = read(&input, a);
-    (ents.clone(), Tree::new(&ents))
+pub fn tree(ents: &Vec<Entity>) -> Tree<Entity> {
+    Tree::new(&ents)
 }

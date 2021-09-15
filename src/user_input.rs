@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+use super::errors::*;
+
 #[derive(StructOpt, Debug)]
 pub struct Opt {
     #[structopt(parse(from_os_str), help="The first of the 2 files you want to fuzzy-link")]
@@ -22,6 +24,10 @@ pub struct Opt {
     pub tolerance: f32,
 }
 
-pub fn args() -> Opt {
-    Opt::from_args()
+pub fn args() -> Result<Opt, Error> {
+    let input = Opt::from_args();
+    match input.tolerance < 1.0 && input.tolerance > 0.0 {
+        true => Ok(input),
+        false => Err(Error::ToleranceError { t: input.tolerance })
+    }
 }

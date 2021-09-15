@@ -1,3 +1,5 @@
+use super::errors::*;
+
 const COLUMN_LETTERS: [char; 26] = [
     'A', 'B', 'C', 'D', 'E', 
     'F', 'F', 'H', 'I', 'J', 
@@ -7,10 +9,10 @@ const COLUMN_LETTERS: [char; 26] = [
     'Z',
 ];
 
-pub fn cols(cols: &[char]) -> Vec<usize> {
+pub fn cols(cols: &[char]) -> Result<Vec<usize>, Error> {
     cols.iter().map(|&c| {
         COLUMN_LETTERS.iter()
             .position(|&l| l == c)
-            .unwrap_or_else(|| panic!("Unable to get column index. {} is not in the range A - Z", c))
+            .ok_or(Error::ColumnError { c })
     }).collect()
 }
