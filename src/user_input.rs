@@ -26,7 +26,7 @@ pub struct Opt {
 
 pub fn args() -> Result<Opt, Error> {
     let input = Opt::from_args();
-    match input.tolerance < 1.0 && input.tolerance > 0.0 {
+    match input.tolerance <= 1.0 && input.tolerance >= 0.0 {
         true => Ok(input),
         false => Err(Error::ToleranceError { t: input.tolerance })
     }

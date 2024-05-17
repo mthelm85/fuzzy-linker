@@ -1,5 +1,4 @@
-use std::process;
-
+use console::style;
 use csv::Writer;
 use indicatif::ParallelProgressIterator;
 use levenshtein::levenshtein;
@@ -24,15 +23,20 @@ fn main() {
         Ok(input) => input,
         Err(e) => {
             eprintln!("{}", e);
-            process::exit(1)
+            return
         }
     };
+
+    println!(
+        "{} Reading CSV files...",
+        style("[1/4]").bold().dim()
+    );
 
     let ents_a = match read_csv::read(&input, true) {
         Ok(ents) => ents,
         Err(e) => {
             eprintln!("{}", e);
-            process::exit(1)
+            return
         }
     };
 
@@ -40,22 +44,29 @@ fn main() {
         Ok(ents) => ents,
         Err(e) => {
             eprintln!("{}", e);
-            process::exit(1)
+            return
         }
     };
     
-    println!("Building tree...");
+    println!(
+        "{} Building VP tree...",
+        style("[2/4]").bold().dim()
+    );
 
     let vp = create_tree::tree(&ents_a);
 
-    println!("Searching for potential matches...");
+    println!(
+        "{} Searching for links...",
+        style("[3/4]").bold().dim()
+    );
 
     let end = ents_b.len() as u64;
     let matches: Vec<Option<CsvRecord>> = ents_b.into_par_iter()
         .progress_count(end)
         .map(|ent| {
             let (index, _) = vp.find_nearest(&ent);
-            if levenshtein(&ent.key, &ents_a[index].key) < (input.tolerance * ent.key.len() as f32) as usize {
+            let max_len = std::cmp::max(ent.key.len(), ents_a[index].key.len());
+            if levenshtein(&ent.key, &ents_a[index].key) < (input.tolerance * max_len as f32) as usize {
                 Some(CsvRecord {
                     row_a: ents_a[index].i + 2,
                     row_b: ent.i + 2
@@ -67,9 +78,15 @@ fn main() {
         Ok(wtr) => wtr,
         Err(_) => {
             eprintln!("{}", errors::Error::CsvWriterError { p: input.output });
-            process::exit(1)
+            return
         }
     };
+
+    println!(
+        "{} Writing link (output) file...",
+        style("[4/4]").bold().dim()
+    );
+
     matches.iter()
         .for_each(|r| {
             if let Some(r) = r {
@@ -80,7 +97,7 @@ fn main() {
             }
         });
     match wtr.flush() {
-        Ok(_) => println!("Done"),
+        Ok(_) => println!("{}", style("Done").green().bright()),
         Err(e) => eprintln!("{}", e)
     };
 }
